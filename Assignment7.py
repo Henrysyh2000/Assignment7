@@ -268,7 +268,17 @@ class Tree:
         :return: True if self BinaryTree contains duplicate values. False otherwise
         """
         # Task 1
-        pass
+        dic = {}
+        nodes = list(self.preorder())
+        for i in nodes:
+            if i._element in dic:
+                dic[i._element] += 1
+            else:
+                dic[i._element] = 1
+        for i in dic.keys():
+            if dic[i] >= 2:
+                return True
+        return False
 
 
     def is_height_balanced(self):
@@ -277,17 +287,33 @@ class Tree:
         :return: True if self BinaryTree is height balanced. False otherwise.
         """
         # Task 2
-        pass
-
-
+        for i in self.nodes():
+            if i._left is None and i._right is not None:
+                num1 = -1
+                num2 = self.height(i._right)
+            elif i._right is None and i._left is not None:
+                num2 = -1
+                num1 = self.height(i._left)
+            elif i._right is None and i._left is None:
+                num1 = num2 = -1
+            else:
+                num1 = self.height(i._left)
+                num2 = self.height(i._right)
+            if abs(num1 - num2) > 1:
+                return False                
+        return True
+        
     def sum_of_leaves(self):
         """
         :self: Tree -- a binary Tree. (contains numbers only)
         :return: Int -- Sum value for all the leaf nodes. You can assume test Tree only contains integers
         """
         # Task 3
-        pass
-
+        s = 0
+        for i in self.nodes():
+            if self.is_leaf(i):
+                s += i._element
+        return s
 
     def evaluate(self):
         """
@@ -297,7 +323,34 @@ class Tree:
         :return: Float result value for evaluating self Tree.
         """
         # Task 6
-        pass
+        stack = []
+        lst = list(self.postorder())
+        for i in lst:
+            if i._element == '+':
+                right = stack.pop()
+                left = stack.pop()
+                res = left + right
+                stack.append(res)
+            elif i._element == '-':
+                right = stack.pop()
+                left = stack.pop()
+                res = left - right
+                stack.append(res)
+            elif i._element == '*':
+                right = stack.pop()
+                left = stack.pop()
+                res = left * right
+                stack.append(res)
+            elif i._element == '/':
+                right = stack.pop()
+                left = stack.pop()
+                res = left / right
+                stack.append(res)
+            else:
+                stack.append(i._element)
+        return stack[0]
+                
+                
 
 
 def is_isomorphic(tree1, tree2):
@@ -308,7 +361,30 @@ def is_isomorphic(tree1, tree2):
     :return: True if tree1 and tree2 are isomorphic. False otherwise.
     """
     # Task 4
-    pass
+    def flip(node1, node2):
+        try:
+            if node1._left._element != node2._left._element:
+                node1._left, node1._right = node1._right, node1._left
+        except:
+            return
+        if node1._left:
+            flip(node1._left, node2._left)
+        if node1._right:
+            flip(node1._right, node2._right)
+                      
+    if tree1.root()._element != tree2.root()._element:
+        return False  
+    elif len(tree1) != len(tree2):
+        return False
+    flip(tree1.root(), tree2.root())
+    new = list(tree1.nodes())
+    lst = list(tree2.nodes())
+    for i in range(len(new)):
+        if new[i]._element != lst[i]._element:
+            return False
+    return True
+    
+        
 
 
 def build_expression_tree(postfix):
@@ -318,11 +394,37 @@ def build_expression_tree(postfix):
     :return: a class Tree object. This tree should be the Expression Tree for the given postfix string.
     """
     # Task 5, modify the code below, this is just place holder code.
-    return Tree()
-
-
-
-
+    lst = postfix.split()
+    lst = lst[::-1]
+    T = Tree()
+    node = T.add_root(lst[0])
+    for i in range(1, len(lst)):
+        if not lst[i].isdigit():
+            if node._right is None:
+                T.add_right(node, lst[i])
+                node = node._right
+            else:
+                T.add_left(node, lst[i])
+                node = node._left
+        else:
+            if node._right is None:
+                T.add_right(node, int(lst[i]))
+            elif node._left is None:
+                T.add_left(node, int(lst[i]))
+                try:
+                    while node._parent._left is not None:
+                        node = node._parent
+                        if node._parent is None:
+                            break
+                except:
+                    pass
+                node = node._parent
+            else:
+                while node._parent._left is not None:
+                    node = node._parent
+                T.add_left(node, lst[i])
+                          
+    return T
 
 
 
@@ -517,10 +619,10 @@ def main():
     print("        7 6     ")
 
     print("Your exp tree 1:")
-    #pretty_print(exp1)
+    pretty_print(exp1)
 
     print("Your exp tree 2:")
-    #pretty_print(exp2)
+    pretty_print(exp2)
 
     print("#-------------------------- Problem 6 evaluate tests... --------------------------")
     print(build_expression_tree("1 2 * 3 4 / +").evaluate(), "    Expected result is 2.75")
